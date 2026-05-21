@@ -41,9 +41,10 @@ def salvar_feedback(nota_reflexao,nota_contexto,comentarios,session_id):
                                   'comentarios':comentarios,
                                   'session_id':session_id})
     
+    
 
 
 def carregar_conversas(celula_de_chat):
 
 
-def carregar_perfis(...)
+def carregar_perfis(...):
