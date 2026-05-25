@@ -1,15 +1,30 @@
 # Interface Streamlit — TCC IA Socrática
 
-
 import streamlit as st
-"""from utils.ia import gerar_resposta
+
+from pathlib import Path
+
+import pandas as pd
+
 from utils.storage import (
     salvar_perfil,
     salvar_conversa,
-    salvar_feedback
+    salvar_feedback,
+    carregar_perfis,
+    carregar_conversas
 )
 
-from utils.prompts import carregar_prompt"""
+from utils.prompts import (
+    carregar_prompt,
+    montar_prompt
+)
+
+from utils.ia import (
+    gerar_resposta
+)
+from utils.session import (
+    gerar_session_id
+)
 
 
 
@@ -107,18 +122,76 @@ aba1, aba2, aba3 = st.tabs([
 
 with aba1:
 
-    st.markdown('<div class="perfil-box">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="perfil-box">',
+        unsafe_allow_html=True
+    )
 
     st.header("👤 Perfil do Estudante")
 
+    st.markdown(
+        """
+        Essas informações ajudam a IA a adaptar
+        explicações, exemplos e perguntas de acordo
+        com sua realidade e forma de aprender.
+        """
+    )
+
     col1, col2 = st.columns(2)
 
+    # =========================================
+    # COLUNA 1
+    # =========================================
+
     with col1:
+
         nome = st.text_input("Nome")
-        idade = st.number_input("Idade", min_value=10, max_value=100)
-        curso = st.text_input("Curso / Série")
+
+        idade = st.number_input(
+            "Idade",
+            min_value=10,
+            max_value=100
+        )
+
+        curso = st.text_input(
+            "Curso / Série"
+        )
+
+        tema = st.text_input(
+            "Tema que deseja estudar"
+        )
+
+        objetivo = st.selectbox(
+            "Qual seu principal objetivo?",
+            [
+                "Vestibular",
+                "ENEM",
+                "Prova escolar",
+                "Faculdade",
+                "Curiosidade",
+                "Aprender por interesse pessoal",
+                "Melhorar notas",
+                "Outro"
+            ]
+        )
+
+        tempo_estudo = st.selectbox(
+            "Quanto tempo costuma estudar por dia?",
+            [
+                "Menos de 30 minutos",
+                "30 minutos",
+                "1 hora",
+                "2 horas",
+                "Mais de 2 horas"
+            ]
+        )
+
+    # =========================================
+    # COLUNA 2
+    # =========================================
 
     with col2:
+
         hobbies = st.multiselect(
             "Interesses / Hobbies",
             [
@@ -130,14 +203,14 @@ with aba1:
                 "Programação",
                 "Filmes",
                 "Leitura",
-                'Filosofia',
-                'Robótica',
-                'Psicologia'
+                "Filosofia",
+                "Robótica",
+                "Psicologia"
             ]
         )
 
         dificuldade = st.selectbox(
-            "Nível de dificuldade",
+            "Nível de dificuldade no tema",
             [
                 "Iniciante",
                 "Intermediário",
@@ -145,11 +218,75 @@ with aba1:
             ]
         )
 
-        tema = st.text_input("Tema que deseja estudar")
+        maior_dificuldade = st.text_area(
+            "Qual sua maior dificuldade ao estudar esse tema?"
+        )
 
-    st.button("Salvar Perfil")
+        aprende_melhor = st.multiselect(
+            "Como você aprende melhor?",
+            [
+                "Exemplos práticos",
+                "Passo a passo",
+                "Exercícios",
+                "Analogias",
+                "Vídeos",
+                "Discussão/conversa",
+                "Teoria",
+                "Com perguntas que me façam pensar",
 
-    st.markdown('</div>', unsafe_allow_html=True)
+            ]
+        )
+
+        emocional = st.selectbox(
+            "Como você se sente em relação a esse tema?",
+            [
+                "Muito confiante",
+                "Confiante",
+                "Neutro",
+                "Inseguro",
+                "Muito inseguro",
+                "Ansioso"
+            ]
+        )
+
+        estilo_resposta = st.selectbox(
+            "Como prefere as respostas da IA?",
+            [
+                "Mais diretas",
+                "Mais reflexivas",
+                "Passo a passo",
+                "Com exemplos do cotidiano",
+                "Com perguntas guiadas"
+            ]
+        )
+
+    # =========================================
+    # BOTÃO
+    # =========================================
+
+    if st.button("Salvar Perfil"):
+
+        salvar_perfil(
+            nome,
+            idade,
+            curso,
+            hobbies,
+            dificuldade,
+            tema,
+            objetivo,
+            tempo_estudo,
+            maior_dificuldade,
+            aprende_melhor,
+            emocional,
+            estilo_resposta
+        )
+
+        st.success("Perfil salvo com sucesso!")
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 
@@ -232,33 +369,150 @@ with aba3:
 
     st.markdown('<div class="feedback-box">', unsafe_allow_html=True)
 
-    st.header("📊 Feedback do Sistema")
+    st.header("📊 Feedback da Experiência")
+
+    st.markdown(
+        """
+        Sua opinião é importante para avaliar se a IA
+        realmente contribui para uma aprendizagem
+        mais reflexiva e crítica.
+        """
+    )
+
+    # =========================================
+    # REFLEXÃO E PENSAMENTO CRÍTICO
+    # =========================================
+
+    st.subheader("🧠 Reflexão e pensamento crítico")
 
     nota_reflexao = st.slider(
-        "A IA ajudou você a refletir melhor?",
+        "A IA ajudou você a refletir melhor sobre o conteúdo?",
         1,
-        5
+        5,
+        3
     )
+
+    nota_pensamento = st.slider(
+        "As perguntas da IA fizeram você pensar antes de responder?",
+        1,
+        5,
+        3
+    )
+
+    nota_autonomia = st.slider(
+        "Você sentiu que construiu o raciocínio por conta própria?",
+        1,
+        5,
+        3
+    )
+
+    # =========================================
+    # CONTEXTUALIZAÇÃO
+    # =========================================
+
+    st.subheader("🌍 Contextualização")
 
     nota_contexto = st.slider(
-        "Os exemplos contextualizados ajudaram?",
+        "Os exemplos contextualizados ajudaram na compreensão?",
         1,
-        5
+        5,
+        3
     )
+
+    nota_cotidiano = st.slider(
+        "A IA conseguiu relacionar o conteúdo ao seu cotidiano?",
+        1,
+        5,
+        3
+    )
+
+    # =========================================
+    # ENGAJAMENTO
+    # =========================================
+
+    st.subheader("🎯 Engajamento")
 
     nota_engajamento = st.slider(
-        "Você se sentiu mais engajado?",
+        "Você se sentiu mais engajado durante a conversa?",
         1,
-        5
+        5,
+        3
     )
 
-    comentario = st.text_area(
-        "Comentários adicionais"
+    nota_interesse = st.slider(
+        "A conversa despertou mais interesse pelo tema estudado?",
+        1,
+        5,
+        3
     )
 
-    st.button("Enviar Feedback")
+    # =========================================
+    # COMPARAÇÃO COM IA TRADICIONAL
+    # =========================================
+
+    st.subheader("🤖 Comparação com outras IAs")
+
+    comparacao = st.radio(
+        "Comparada a IAs que apenas dão respostas prontas, esta experiência foi:",
+        [
+            "Muito pior",
+            "Pior",
+            "Sem diferença",
+            "Melhor",
+            "Muito melhor"
+        ]
+    )
+
+    # =========================================
+    # DIFICULDADE E FRUSTRAÇÃO
+    # =========================================
+
+    st.subheader("⚖️ Dificuldade")
+
+    nota_dificuldade = st.slider(
+        "As perguntas da IA foram difíceis em excesso?",
+        1,
+        5,
+        3
+    )
+
+    nota_frustracao = st.slider(
+        "Você se sentiu frustrado em algum momento da interação?",
+        1,
+        5,
+        1
+    )
+
+    # =========================================
+    # RESPOSTAS ABERTAS
+    # =========================================
+
+    st.subheader("✍️ Respostas abertas")
+
+    aprendizado = st.text_area(
+        "O que você acredita ter aprendido ou compreendido melhor?"
+    )
+
+    experiencia = st.text_area(
+        "Como você descreveria a experiência de conversar com essa IA?"
+    )
+
+    sugestoes = st.text_area(
+        "Sugestões, críticas ou melhorias"
+    )
+
+    # =========================================
+    # BOTÃO
+    # =========================================
+
+    if st.button("Enviar Feedback"):
+
+        st.success("Feedback enviado com sucesso!")
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+
 
 # =========================================
 # SIDEBAR
@@ -272,7 +526,8 @@ with st.sidebar:
         "Modelo IA",
         [
             "GPT-4.1-mini",
-            "GPT-4o-mini"
+            "GPT-4o-mini",
+            'gemini-3.1-flash-lite'
         ]
     )
 
@@ -280,8 +535,8 @@ with st.sidebar:
         "Modo pedagógico",
         [
             "Socrático",
-            "Freireano",
-            "Reflexivo"
+            "Freireano"
+            
         ]
     )
 
