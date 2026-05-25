@@ -3,7 +3,7 @@
 import streamlit as st
 
 from pathlib import Path
-
+import os
 import pandas as pd
 
 from utils.storage import (
@@ -37,6 +37,32 @@ st.set_page_config(
     page_icon="🧠",
     layout="wide"
 )
+
+if "OPENAI_API_KEY" in st.secrets:
+
+    openai_key = st.secrets["OPENAI_API_KEY"]
+
+else:
+
+    openai_key = os.getenv(
+        "OPENAI_API_KEY"
+    )
+
+
+
+if "GEMINI_API_KEY" in st.secrets:
+
+    gemini_key = st.secrets["GEMINI_API_KEY"]
+
+else:
+
+    gemini_key = os.getenv(
+        "GEMINI_API_KEY"
+    )
+
+
+
+
 
 # =========================================
 # ESTILO VISUAL
