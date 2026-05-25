@@ -91,6 +91,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+if "session_id" not in st.session_state:
+
+    st.session_state.session_id = (
+        gerar_session_id()
+    )
+
 # =========================================
 # TÍTULO PRINCIPAL
 # =========================================
@@ -303,52 +309,199 @@ with aba1:
 
 with aba2:
 
-    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="chat-box">',
+        unsafe_allow_html=True
+    )
 
     st.header("💬 Conversa com a IA")
 
-    # Histórico do chat
+    # =====================================
+    # SESSION ID
+    # =====================================
+
+    if "session_id" not in st.session_state:
+
+        st.session_state.session_id = (
+            gerar_session_id()
+        )
+
+    # =====================================
+    # HISTÓRICO
+    # =====================================
+
     if "messages" not in st.session_state:
+
         st.session_state.messages = []
 
-    # Mostrar mensagens antigas
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # =====================================
+    # MOSTRAR HISTÓRICO
+    # =====================================
 
-    # Entrada do usuário
-    prompt = st.chat_input("Digite sua pergunta...")
+    for message in st.session_state.messages:
+
+        with st.chat_message(
+            message["role"]
+        ):
+
+            st.markdown(
+                message["content"]
+            )
+
+    # =====================================
+    # INPUT
+    # =====================================
+
+    prompt = st.chat_input(
+        "Digite sua pergunta..."
+    )
+
+    # =====================================
+    # NOVA MENSAGEM
+    # =====================================
 
     if prompt:
 
-        # Mensagem do usuário
+        # ================================
+        # MENSAGEM USER
+        # ================================
+
         st.session_state.messages.append({
+
             "role": "user",
+
             "content": prompt
+
         })
 
         with st.chat_message("user"):
+
             st.markdown(prompt)
 
-        # RESPOSTA SIMULADA
-        resposta_ia = "Interessante... antes de responder diretamente, me diga: como você relacionaria isso ao seu cotidiano?"
+        # ================================
+        # SYSTEM PROMPT
+        # ================================
+
+        system_prompt = carregar_prompt(
+            modo
+        )
+
+        # ================================
+        # PERFIL ALUNO
+        # ================================
+
+        perfil = {
+
+            "nome": nome,
+
+            "idade": idade,
+
+            "curso": curso,
+
+            "hobbies": hobbies,
+
+            "dificuldade": dificuldade,
+
+            "tema": tema,
+
+            "objetivo": objetivo,
+
+            "tempo_estudo": tempo_estudo,
+
+            "maior_dificuldade":
+            maior_dificuldade,
+
+            "aprende_melhor":
+            aprende_melhor,
+
+            "emocional":
+            emocional,
+
+            "estilo_resposta":
+            estilo_resposta
+        }
+
+        # ================================
+        # USER PROMPT
+        # ================================
+
+        user_prompt = montar_prompt(
+
+            perfil=perfil,
+
+            pergunta=prompt,
+
+            historico=
+            st.session_state.messages,
+
+            profundidade=
+            profundidade
+        )
+
+        # ================================
+        # RESPOSTA IA
+        # ================================
+
+        with st.chat_message(
+            "assistant"
+        ):
+
+            with st.spinner(
+                "Pensando..."
+            ):
+
+                try:
+
+                    resposta_ia = gerar_resposta(
+
+                        modelo=modelo,
+
+                        system_prompt=
+                        system_prompt,
+
+                        user_prompt=
+                        user_prompt
+                    )
+
+                except Exception as e:
+
+                    resposta_ia = (
+                        f"Erro na IA: {e}"
+                    )
+
+            st.markdown(resposta_ia)
+
+        # ================================
+        # SALVAR HISTÓRICO
+        # ================================
 
         st.session_state.messages.append({
+
             "role": "assistant",
+
             "content": resposta_ia
         })
 
-        with st.chat_message("assistant"):
-            st.markdown(resposta_ia)
+        # ================================
+        # SALVAR CONVERSA
+        # ================================
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        salvar_conversa(
 
+            session_id=
+            st.session_state.session_id,
 
+            nome=nome,
 
+            pergunta=prompt,
 
+            resposta=resposta_ia
+        )
 
-
-
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 
