@@ -81,6 +81,7 @@ def salvar_perfil(
 
         session_id,
 
+
         str(datetime.now()),
 
         nome,
@@ -115,15 +116,29 @@ def salvar_perfil(
 # =========================================
 
 def salvar_conversa(
+
     session_id,
+
+    numero_interacao, #para suportar as várias interações dentro de uma mesma sessão
+
     nome,
+
     pergunta,
-    resposta
+
+    resposta,
+
+    modelo,
+
+    modo,
+
+    profundidade
 ):
 
     aba_conversas.append_row([
 
         session_id,
+
+        numero_interacao,
 
         str(datetime.now()),
 
@@ -131,10 +146,15 @@ def salvar_conversa(
 
         pergunta,
 
-        resposta
+        resposta,
+
+        modelo,
+
+        modo,
+
+        profundidade
 
     ])
-
 
 # =========================================
 # SALVAR FEEDBACK

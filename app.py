@@ -26,7 +26,7 @@ from utils.session import (
     gerar_session_id
 )
 
-
+from datetime import datetime   
 
 # =========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -91,11 +91,60 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-if "session_id" not in st.session_state:
 
-    st.session_state.session_id = (
-        gerar_session_id()
+
+
+
+with st.sidebar:
+
+    st.title("⚙️ Configurações")
+
+    modelo = st.selectbox(
+        "Modelo IA",
+        [
+            "GPT-4.1-mini",
+            "GPT-4o-mini",
+            'gemini-3.1-flash-lite'
+        ]
     )
+
+    modo = st.selectbox(
+        "Modo pedagógico",
+        [
+            "Socrático",
+            "Freireano"
+            
+        ]
+    )
+
+    profundidade = st.slider(
+        "Profundidade das perguntas",
+        1,
+        5,
+        3
+    )
+
+    st.markdown("---")
+
+    st.markdown(
+        """
+        ### Sobre
+
+        Projeto de TCC utilizando:
+
+        - Streamlit
+        - OpenAI API
+        - IA Educacional
+        - Maiêutica
+        - Paulo Freire
+        """
+    )
+
+
+
+
+
+
 
 # =========================================
 # TÍTULO PRINCIPAL
@@ -266,13 +315,12 @@ with aba1:
             ]
         )
 
-    # =========================================
-    # BOTÃO
-    # =========================================
+    
 
     if st.button("Salvar Perfil"):
-
+        timestamp = datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
         salvar_perfil(
+            st.session_state.session_id,
             nome,
             idade,
             curso,
@@ -326,6 +374,11 @@ with aba2:
             gerar_session_id()
         )
 
+    #NUMERO DE INTERACOES
+    
+    if "numero_interacao" not in st.session_state:
+        st.session_state.numero_interacao = 0
+
     # =====================================
     # HISTÓRICO
     # =====================================
@@ -361,6 +414,7 @@ with aba2:
     # =====================================
 
     if prompt:
+        st.session_state.numero_interacao += 1
 
         # ================================
         # MENSAGEM USER
@@ -488,15 +542,24 @@ with aba2:
 
         salvar_conversa(
 
-            session_id=
-            st.session_state.session_id,
+        session_id=
+        st.session_state.session_id,
 
-            nome=nome,
+        numero_interacao=
+        st.session_state.numero_interacao,
 
-            pergunta=prompt,
+        nome=nome,
 
-            resposta=resposta_ia
-        )
+        pergunta=prompt,
+
+        resposta=resposta_ia,
+
+        modelo=modelo,
+
+        modo=modo,
+
+        profundidade=profundidade
+                )
 
     st.markdown(
         '</div>',
@@ -671,47 +734,3 @@ with aba3:
 # SIDEBAR
 # =========================================
 
-with st.sidebar:
-
-    st.title("⚙️ Configurações")
-
-    modelo = st.selectbox(
-        "Modelo IA",
-        [
-            "GPT-4.1-mini",
-            "GPT-4o-mini",
-            'gemini-3.1-flash-lite'
-        ]
-    )
-
-    modo = st.selectbox(
-        "Modo pedagógico",
-        [
-            "Socrático",
-            "Freireano"
-            
-        ]
-    )
-
-    profundidade = st.slider(
-        "Profundidade das perguntas",
-        1,
-        5,
-        3
-    )
-
-    st.markdown("---")
-
-    st.markdown(
-        """
-        ### Sobre
-
-        Projeto de TCC utilizando:
-
-        - Streamlit
-        - OpenAI API
-        - IA Educacional
-        - Maiêutica
-        - Paulo Freire
-        """
-    )
