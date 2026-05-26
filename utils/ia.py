@@ -2,7 +2,7 @@ from google import genai
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
-
+import json
 load_dotenv()
 
 # =========================================
@@ -90,6 +90,93 @@ def gerar_resposta(
             .message
             .content
         )
+
+
+
+
+
+
+def atualizar_memoria_pedagogica(
+    prompt,
+    resposta_ia
+):
+
+    prompt_memoria = f"""
+Analise a interação abaixo.
+
+Aluno:
+{prompt}
+
+Tutor:
+{resposta_ia}
+
+Retorne APENAS JSON válido.
+
+Formato:
+
+{{
+    "conceitos_compreendidos": [],
+    "conceitos_dificuldade": [],
+    "hipoteses": []
+}}
+
+Máximo de 3 itens por lista.
+"""
+
+    response = openai_client.chat.completions.create(
+
+        model="gpt-4o-mini",
+
+        messages=[
+            {
+                "role":"user",
+                "content":prompt_memoria
+            }
+        ],
+
+        temperature=0
+    )
+
+    try:
+
+        return json.loads(
+            response.choices[0]
+            .message
+            .content
+        )
+
+    except:
+
+        return {
+
+            "conceitos_compreendidos": [],
+
+            "conceitos_dificuldade": [],
+
+            "hipoteses": []
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # =========================================

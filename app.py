@@ -31,7 +31,13 @@ from utils.session import (
     gerar_session_id
 )
 
-from datetime import datetime   
+from datetime import datetime  
+
+
+from utils.ia import (
+    gerar_resposta,
+    atualizar_memoria_pedagogica
+)
 
 # =========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -169,15 +175,7 @@ with st.sidebar:
 
 
 
-if "perfil_contexto" not in st.session_state:
-    st.session_state.perfil_contexto = ""
 
-if "memoria_pedagogica" not in st.session_state:
-    st.session_state.memoria_pedagogica = {
-        "conceitos_compreendidos": [],
-        "conceitos_dificuldade": [],
-        "hipoteses": []
-    }
 
 
 
@@ -430,6 +428,17 @@ with aba2:
 
         st.session_state.messages = []
 
+
+
+    if "memoria_pedagogica" not in st.session_state:
+        st.session_state.memoria_pedagogica = {
+            "conceitos_compreendidos": [],
+            "conceitos_dificuldade": [],
+            "hipoteses": []
+        }
+    
+
+
     for message in st.session_state.messages:
 
         with st.chat_message(
@@ -504,9 +513,40 @@ with aba2:
         # PERFIL
         # =====================================
 
+        perfil = {
+
+            "nome": nome,
+
+            "idade": idade,
+
+            "curso": curso,
+
+            "hobbies": hobbies,
+
+            "dificuldade": dificuldade,
+
+            "tema": tema,
+
+            "objetivo": objetivo,
+
+            "tempo_estudo": tempo_estudo,
+
+            "maior_dificuldade":
+            maior_dificuldade,
+
+            "aprende_melhor":
+            aprende_melhor,
+
+            "emocional":
+            emocional,
+
+            "estilo_resposta":
+            estilo_resposta
+        }
+
         perfil_contexto = (
             montar_contexto_perfil(
-                st.session_state.perfil_contexto
+                perfil
             )
         )
 
@@ -593,8 +633,72 @@ with aba2:
                     )
 
             renderizar_resposta(
-                                resposta_ia
-                                )
+                resposta_ia
+            )
+
+        # =====================================
+        # ATUALIZAR MEMÓRIA PEDAGÓGICA
+        # =====================================
+
+        nova_memoria = (
+            atualizar_memoria_pedagogica(
+
+                prompt,
+
+                resposta_ia
+            )
+        )
+
+        for item in nova_memoria[
+            "conceitos_compreendidos"
+        ]:
+
+            if item not in (
+                st.session_state
+                .memoria_pedagogica[
+                    "conceitos_compreendidos"
+                ]
+            ):
+
+                st.session_state\
+                    .memoria_pedagogica[
+                        "conceitos_compreendidos"
+                    ]\
+                    .append(item)
+
+        for item in nova_memoria[
+            "conceitos_dificuldade"
+        ]:
+
+            if item not in (
+                st.session_state
+                .memoria_pedagogica[
+                    "conceitos_dificuldade"
+                ]
+            ):
+
+                st.session_state\
+                    .memoria_pedagogica[
+                        "conceitos_dificuldade"
+                    ]\
+                    .append(item)
+
+        for item in nova_memoria[
+            "hipoteses"
+        ]:
+
+            if item not in (
+                st.session_state
+                .memoria_pedagogica[
+                    "hipoteses"
+                ]
+            ):
+
+                st.session_state\
+                    .memoria_pedagogica[
+                        "hipoteses"
+                    ]\
+                    .append(item)
 
         # =====================================
         # HISTÓRICO
@@ -617,20 +721,15 @@ with aba2:
         )
 
         # =====================================
-        # MEMÓRIA PEDAGÓGICA
+        # DEBUG MEMÓRIA
         # =====================================
-
-        st.session_state.memoria_pedagogica[
-            "hipoteses"
-        ].append(
-            prompt
-        )
 
         st.write(
-        st.session_state.memoria_pedagogica
+            st.session_state.memoria_pedagogica
         )
+
         # =====================================
-        # SALVAR
+        # SALVAR CONVERSA
         # =====================================
 
         salvar_conversa(
