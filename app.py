@@ -6,6 +6,10 @@ from pathlib import Path
 import os
 import pandas as pd
 
+from utils.render import (
+    renderizar_resposta
+)
+
 from utils.storage import (
     salvar_perfil,
     salvar_conversa,
@@ -16,7 +20,8 @@ from utils.storage import (
 
 from utils.prompts import (
     carregar_prompt,
-    montar_prompt
+    montar_contexto_perfil,
+    montar_memoria
 )
 
 from utils.ia import (
@@ -38,27 +43,23 @@ st.set_page_config(
     layout="wide"
 )
 
-if "OPENAI_API_KEY" in st.secrets:
+if Path('.env').exists():
 
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+else:
+    
     openai_key = st.secrets["OPENAI_API_KEY"]
 
+if Path('.env').exists():
+
+    gemini_key = os.getenv("GEMINI_API_KEY")
+
 else:
-
-    openai_key = os.getenv(
-        "OPENAI_API_KEY"
-    )
-
-
-
-if "GEMINI_API_KEY" in st.secrets:
-
+    
     gemini_key = st.secrets["GEMINI_API_KEY"]
 
-else:
 
-    gemini_key = os.getenv(
-        "GEMINI_API_KEY"
-    )
 
 
 
@@ -126,13 +127,13 @@ with st.sidebar:
     st.title("⚙️ Configurações")
 
     modelo = st.selectbox(
-        "Modelo IA",
-        [
-            "GPT-4.1-mini",
-            "GPT-4o-mini",
-            'gemini-3.1-flash-lite'
-        ]
-    )
+                            "Modelo IA",
+                                        [
+                            "gpt-4o-mini",
+                            "gemini-3.1-flash-lite"
+                                        ]
+)
+    
 
     modo = st.selectbox(
         "Modo pedagógico",
@@ -168,7 +169,15 @@ with st.sidebar:
 
 
 
+if "perfil_contexto" not in st.session_state:
+    st.session_state.perfil_contexto = ""
 
+if "memoria_pedagogica" not in st.session_state:
+    st.session_state.memoria_pedagogica = {
+        "conceitos_compreendidos": [],
+        "conceitos_dificuldade": [],
+        "hipoteses": []
+    }
 
 
 
@@ -361,6 +370,23 @@ with aba1:
             estilo_resposta
         )
 
+        st.session_state.perfil_contexto = {
+                                            "nome": nome,
+                                            "idade": idade,
+                                            "curso": curso,
+                                            "hobbies": hobbies,
+                                            "dificuldade": dificuldade,
+                                            "tema": tema,
+                                            "objetivo": objetivo,
+                                            "tempo_estudo": tempo_estudo,
+                                            "maior_dificuldade": maior_dificuldade,
+                                            "aprende_melhor": aprende_melhor,
+                                            "emocional": emocional,
+                                            "estilo_resposta": estilo_resposta
+                                            }
+
+
+
         st.success("Perfil salvo com sucesso!")
 
     st.markdown(
@@ -390,32 +416,19 @@ with aba2:
 
     st.header("💬 Conversa com a IA")
 
-    # =====================================
-    # SESSION ID
-    # =====================================
-
     if "session_id" not in st.session_state:
 
         st.session_state.session_id = (
             gerar_session_id()
         )
 
-    #NUMERO DE INTERACOES
-    
     if "numero_interacao" not in st.session_state:
-        st.session_state.numero_interacao = 0
 
-    # =====================================
-    # HISTÓRICO
-    # =====================================
+        st.session_state.numero_interacao = 0
 
     if "messages" not in st.session_state:
 
         st.session_state.messages = []
-
-    # =====================================
-    # MOSTRAR HISTÓRICO
-    # =====================================
 
     for message in st.session_state.messages:
 
@@ -427,100 +440,131 @@ with aba2:
                 message["content"]
             )
 
-    # =====================================
-    # INPUT
-    # =====================================
-
     prompt = st.chat_input(
         "Digite sua pergunta..."
     )
 
-    # =====================================
-    # NOVA MENSAGEM
-    # =====================================
-
     if prompt:
+
         st.session_state.numero_interacao += 1
 
-        # ================================
-        # MENSAGEM USER
-        # ================================
-
-        st.session_state.messages.append({
-
-            "role": "user",
-
-            "content": prompt
-
-        })
-
-        with st.chat_message("user"):
+        with st.chat_message(
+            "user"
+        ):
 
             st.markdown(prompt)
 
-        # ================================
+        # =====================================
         # SYSTEM PROMPT
-        # ================================
+        # =====================================
 
         system_prompt = carregar_prompt(
             modo
         )
 
-        # ================================
-        # PERFIL ALUNO
-        # ================================
+        # =====================================
+        # PROFUNDIDADE
+        # =====================================
 
-        perfil = {
+        profundidade_contexto = {
 
-            "nome": nome,
+            1:
+            """
+            Respostas diretas.
+            Faça no máximo uma pergunta reflexiva.
+            """,
 
-            "idade": idade,
+            2:
+            """
+            Misture explicação e reflexão.
+            Faça perguntas ocasionais.
+            """,
 
-            "curso": curso,
+            3:
+            """
+            Equilibre explicação e questionamento.
+            Estimule o raciocínio do estudante.
+            """,
 
-            "hobbies": hobbies,
+            4:
+            """
+            Priorize perguntas guiadas.
+            Evite entregar respostas prontas rapidamente.
+            """,
 
-            "dificuldade": dificuldade,
-
-            "tema": tema,
-
-            "objetivo": objetivo,
-
-            "tempo_estudo": tempo_estudo,
-
-            "maior_dificuldade":
-            maior_dificuldade,
-
-            "aprende_melhor":
-            aprende_melhor,
-
-            "emocional":
-            emocional,
-
-            "estilo_resposta":
-            estilo_resposta
+            5:
+            """
+            Atue fortemente pela maiêutica.
+            Questione hipóteses.
+            Conduza a construção do raciocínio.
+            """
         }
 
-        # ================================
-        # USER PROMPT
-        # ================================
+        # =====================================
+        # PERFIL
+        # =====================================
 
-        user_prompt = montar_prompt(
-
-            perfil=perfil,
-
-            pergunta=prompt,
-
-            historico=
-            st.session_state.messages,
-
-            profundidade=
-            profundidade
+        perfil_contexto = (
+            montar_contexto_perfil(
+                st.session_state.perfil_contexto
+            )
         )
 
-        # ================================
+        # =====================================
+        # MEMÓRIA
+        # =====================================
+
+        memoria_contexto = (
+            montar_memoria(
+                st.session_state.memoria_pedagogica
+            )
+        )
+
+        # =====================================
+        # MENSAGENS PARA IA
+        # =====================================
+
+        messages_api = [
+
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+
+            {
+                "role": "system",
+                "content":
+                profundidade_contexto[
+                    profundidade
+                ]
+            },
+
+            {
+                "role": "system",
+                "content": perfil_contexto
+            },
+
+            {
+                "role": "system",
+                "content": memoria_contexto
+            }
+        ]
+
+        messages_api.extend(
+            st.session_state.messages
+        )
+
+        messages_api.append(
+
+            {
+                "role": "user",
+                "content": prompt
+            }
+        )
+
+        # =====================================
         # RESPOSTA IA
-        # ================================
+        # =====================================
 
         with st.chat_message(
             "assistant"
@@ -532,15 +576,14 @@ with aba2:
 
                 try:
 
-                    resposta_ia = gerar_resposta(
+                    resposta_ia = (
+                        gerar_resposta(
 
-                        modelo=modelo,
+                            modelo=modelo,
 
-                        system_prompt=
-                        system_prompt,
-
-                        user_prompt=
-                        user_prompt
+                            messages=
+                            messages_api
+                        )
                     )
 
                 except Exception as e:
@@ -549,50 +592,72 @@ with aba2:
                         f"Erro na IA: {e}"
                     )
 
-            st.markdown(resposta_ia)
+            renderizar_resposta(
+                                resposta_ia
+                                )
 
-        # ================================
-        # SALVAR HISTÓRICO
-        # ================================
+        # =====================================
+        # HISTÓRICO
+        # =====================================
 
-        st.session_state.messages.append({
+        st.session_state.messages.append(
 
-            "role": "assistant",
+            {
+                "role": "user",
+                "content": prompt
+            }
+        )
 
-            "content": resposta_ia
-        })
+        st.session_state.messages.append(
 
-        # ================================
-        # SALVAR CONVERSA
-        # ================================
+            {
+                "role": "assistant",
+                "content": resposta_ia
+            }
+        )
+
+        # =====================================
+        # MEMÓRIA PEDAGÓGICA
+        # =====================================
+
+        st.session_state.memoria_pedagogica[
+            "hipoteses"
+        ].append(
+            prompt
+        )
+
+        st.write(
+        st.session_state.memoria_pedagogica
+        )
+        # =====================================
+        # SALVAR
+        # =====================================
 
         salvar_conversa(
 
-        session_id=
-        st.session_state.session_id,
+            session_id=
+            st.session_state.session_id,
 
-        numero_interacao=
-        st.session_state.numero_interacao,
+            numero_interacao=
+            st.session_state.numero_interacao,
 
-        nome=nome,
+            nome=nome,
 
-        pergunta=prompt,
+            pergunta=prompt,
 
-        resposta=resposta_ia,
+            resposta=resposta_ia,
 
-        modelo=modelo,
+            modelo=modelo,
 
-        modo=modo,
+            modo=modo,
 
-        profundidade=profundidade
-                )
+            profundidade=profundidade
+        )
 
     st.markdown(
         '</div>',
         unsafe_allow_html=True
     )
-
-
 
 
 
@@ -748,6 +813,45 @@ with aba3:
     # =========================================
 
     if st.button("Enviar Feedback"):
+        salvar_feedback(
+
+            session_id = st.session_state.session_id,
+
+            modelo = modelo,
+
+            modo = modo,
+
+            profundidade = profundidade,
+
+            nota_reflexao = nota_reflexao,
+
+            nota_pensamento = nota_pensamento,
+
+            nota_autonomia = nota_autonomia,
+
+            nota_contexto = nota_contexto,
+
+            nota_cotidiano = nota_cotidiano,
+
+            nota_engajamento = nota_engajamento,
+
+            nota_interesse = nota_interesse,
+
+            nota_dificuldade = nota_dificuldade,
+
+            nota_frustracao = nota_frustracao,
+
+            comparacao = comparacao,
+
+            aprendizado =  aprendizado,
+
+            experiencia = experiencia,
+
+            sugestoes = sugestoes
+
+
+
+        )
 
         st.success("Feedback enviado com sucesso!")
 

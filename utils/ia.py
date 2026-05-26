@@ -2,7 +2,6 @@ from google import genai
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
-from utils.prompts import carregar_prompt,montar_prompt
 
 load_dotenv()
 
@@ -24,8 +23,7 @@ openai_client = OpenAI(
 
 def gerar_resposta(
     modelo,
-    system_prompt,
-    user_prompt
+    messages
 ):
 
     # =====================================
@@ -34,15 +32,39 @@ def gerar_resposta(
 
     if "gemini" in modelo.lower():
 
-        response = gemini_client.models.generate_content(
+        system_instruction = ""
 
-            model=modelo,
+        historico = []
 
-            config={
-                "system_instruction": system_prompt
-            },
+        for mensagem in messages:
 
-            contents=user_prompt
+            if mensagem["role"] == "system":
+
+                system_instruction += (
+                    mensagem["content"]
+                    + "\n\n"
+                )
+
+            else:
+
+                historico.append(
+                    mensagem["content"]
+                )
+
+        response = (
+            gemini_client.models.generate_content(
+
+                model=modelo,
+
+                config={
+                    "system_instruction":
+                    system_instruction
+                },
+
+                contents="\n\n".join(
+                    historico
+                )
+            )
         )
 
         return response.text
@@ -53,49 +75,53 @@ def gerar_resposta(
 
     else:
 
-        response = openai_client.chat.completions.create(
+        response = (
+            openai_client.chat.completions.create(
 
-            model=modelo,
+                model=modelo,
 
-            messages=[
-
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ]
+                messages=messages
+            )
         )
 
-        return response.choices[0].message.content
-    
+        return (
+            response
+            .choices[0]
+            .message
+            .content
+        )
 
+
+# =========================================
 # TESTE LOCAL
 # =========================================
 
 if __name__ == "__main__":
 
-    system_prompt = """
-Você é um tutor socrático.
-"""
+    messages = [
 
-    user_prompt = """
-Aluno gosta de futebol.
+        {
+            "role": "system",
+            "content":
+            "Você é um tutor socrático."
+        },
 
-Pergunta:
-O que é função do primeiro grau?
-"""
+        {
+            "role": "user",
+            "content":
+            "O que é função do primeiro grau?"
+        }
+    ]
 
     resposta = gerar_resposta(
-        "gemini-2.5-flash",
-        system_prompt,
-        user_prompt
+
+        "gpt-4o-mini",
+
+        messages
     )
 
-    print("\n========== RESPOSTA ==========\n")
+    print(
+        "\n========== RESPOSTA ==========\n"
+    )
 
     print(resposta)
