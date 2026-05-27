@@ -136,7 +136,11 @@ with st.sidebar:
                             "Modelo IA",
                                         [
                             "gpt-4o-mini",
-                            "gemini-3.1-flash-lite"
+                            "gemini-3.1-flash-lite",
+                            "gemini-2.5-pro",
+                            "gpt-4o",
+                            "gpt-4.1",
+                            "gpt-4.1-mini"
                                         ]
 )
     
@@ -144,8 +148,8 @@ with st.sidebar:
     modo = st.selectbox(
         "Modo pedagógico",
         [
-            "Socrático",
-            "Freireano"
+            "Socrático-Freiriano",
+            "Tradicional"
             
         ]
     )
@@ -317,7 +321,6 @@ with aba1:
                 "Passo a passo",
                 "Exercícios",
                 "Analogias",
-                "Vídeos",
                 "Discussão/conversa",
                 "Teoria",
                 "Com perguntas que me façam pensar",
@@ -412,7 +415,7 @@ with aba2:
         unsafe_allow_html=True
     )
 
-    st.header("💬 Conversa com a IA")
+    st.header(f"💬 Conversa com a IA - {modelo}")
 
     if "session_id" not in st.session_state:
 
