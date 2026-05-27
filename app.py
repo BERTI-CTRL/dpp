@@ -462,6 +462,7 @@ with aba2:
     )
 
     st.header(f"💬 Conversa com a IA - {modelo}")
+    st.subheader("O modelo mais funcional nos testes foi o gpt-4.1-mini,mas você pode testar outros e avaliar")
 
     if "session_id" not in st.session_state:
 
