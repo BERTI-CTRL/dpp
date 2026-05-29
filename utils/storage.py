@@ -269,3 +269,43 @@ def carregar_feedback():
     dados = aba_feedback.get_all_records()
 
     return pd.DataFrame(dados)
+
+def buscar_perfis_aluno(nome_aluno, idade):
+
+    df = carregar_perfis()
+
+    df.columns = df.columns.str.strip()
+
+    nome_aluno = nome_aluno.strip().upper()
+
+    
+
+    df_filtrado = df[
+        (
+            df["nome"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == nome_aluno
+        )
+        &
+        (
+            df["idade"] == idade
+        )
+    ]
+
+    st.write("FILTRADO")
+    st.write(df_filtrado)
+
+    if df_filtrado.empty:
+        return None
+
+    return df_filtrado.iloc[-1].to_dict()
+
+
+if __name__ == "__main__":
+    # Exemplo de uso
+    perfis = carregar_perfis()
+    print(type(perfis))
+
+    print(perfis.columns)

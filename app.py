@@ -15,7 +15,8 @@ from utils.storage import (
     salvar_conversa,
     salvar_feedback,
     carregar_perfis,
-    carregar_conversas
+    carregar_conversas,
+    buscar_perfis_aluno
 )
 
 from utils.prompts import (
@@ -135,11 +136,11 @@ with st.sidebar:
     modelo = st.selectbox(
                             "Modelo IA",
                                         [
-                            "gpt-4o-mini",
+                            "gpt-4.1",
                             "gemini-3.1-flash-lite",
                             "gemini-2.5-pro",
                             "gpt-4o",
-                            "gpt-4.1",
+                            "gpt-4o-mini",
                             "gpt-4.1-mini"
                                         ]
 )
@@ -208,6 +209,7 @@ aba1, aba2, aba3 = st.tabs([
     "📊 Feedback"
 ])
 
+
 # =========================================
 # ABA 1 — PERFIL
 # =========================================
@@ -229,28 +231,134 @@ with aba1:
         """
     )
 
+    # =====================================
+    # INICIALIZA SESSION STATE
+    # =====================================
+
+    campos = {
+
+        "nome": "",
+        "idade": 18,
+        "curso": "",
+        "tema": "",
+        "objetivo": "Vestibular",
+        "tempo_estudo": "Menos de 30 minutos",
+
+        "hobbies": [],
+        "dificuldade": "Iniciante",
+        "maior_dificuldade": "",
+        "aprende_melhor": [],
+        "emocional": "Neutro",
+        "estilo_resposta": "Mais diretas"
+    }
+
+    for chave, valor in campos.items():
+
+        if chave not in st.session_state:
+
+            st.session_state[chave] = valor
+
+    # =====================================
+    # CARREGAR PERFIL
+    # =====================================
+
+    if "perfil_carregado" in st.session_state:
+
+        perfil = st.session_state["perfil_carregado"]
+
+        for chave in campos.keys():
+
+            if chave in perfil:
+
+                valor = perfil[chave]
+
+                # multiselect
+                if chave in [
+                    "hobbies",
+                    "aprende_melhor"
+                ]:
+
+                    if isinstance(valor, str):
+
+                        valor = valor.split(", ")
+
+                st.session_state[chave] = valor
+
+        del st.session_state["perfil_carregado"]
+
+    # =====================================
+    # BOTÃO BUSCAR
+    # =====================================
+
+    col_busca1, col_busca2 = st.columns([3,1])
+
+    with col_busca1:
+
+        nome_busca = st.text_input(
+            "Buscar perfil pelo nome"
+        )
+
+    with col_busca2:
+
+        idade_busca = st.number_input(
+            "Idade busca",
+            min_value=10,
+            max_value=100,
+            value=18
+        )
+
+    if st.button("Buscar Perfil"):
+
+        perfil = buscar_perfis_aluno(
+
+            nome_aluno=
+            nome_busca.strip().upper(),
+
+            idade=idade_busca
+        )
+
+        if perfil:
+
+            st.session_state[
+                "perfil_carregado"
+            ] = perfil
+
+            st.rerun()
+
+        else:
+
+            st.error(
+                "Perfil não encontrado."
+            )
+
     col1, col2 = st.columns(2)
 
-    # =========================================
+    # =====================================
     # COLUNA 1
-    # =========================================
+    # =====================================
 
     with col1:
 
-        nome = st.text_input("Nome")
+        nome = st.text_input(
+            "Nome",
+            key="nome"
+        )
 
         idade = st.number_input(
             "Idade",
             min_value=10,
-            max_value=100
+            max_value=100,
+            key="idade"
         )
 
         curso = st.text_input(
-            "Curso / Série"
+            "Curso / Série",
+            key="curso"
         )
 
         tema = st.text_input(
-            "Tema que deseja estudar"
+            "Tema que deseja estudar",
+            key="tema"
         )
 
         objetivo = st.selectbox(
@@ -264,7 +372,8 @@ with aba1:
                 "Aprender por interesse pessoal",
                 "Melhorar notas",
                 "Outro"
-            ]
+            ],
+            key="objetivo"
         )
 
         tempo_estudo = st.selectbox(
@@ -275,77 +384,39 @@ with aba1:
                 "1 hora",
                 "2 horas",
                 "Mais de 2 horas"
-            ]
+            ],
+            key="tempo_estudo"
         )
 
-    # =========================================
+    # =====================================
     # COLUNA 2
-    # =========================================
+    # =====================================
 
     with col2:
 
         hobbies = st.multiselect(
             "Interesses / Hobbies",
-                                    [
-        "Música",
-        "Futebol",
-        "Vôlei",
-        "Basquete",
-        "Academia",
-        "Corrida",
-        "Lutas",
-        "Jogos",
-        "Jogos de Estratégia",
-        "Jogos de RPG",
-        "Programação",
-        "Robótica",
-        "Eletrônica",
-        "Tecnologia",
-        "Inteligência Artificial",
-        "Ciência",
-        "Astronomia",
-        "Matemática",
-        "Física",
-        "Química",
-        "Biologia",
-        "Engenharia",
-        "Construção Civil",
-        "Arquitetura",
-        "Carros",
-        "Motos",
-        "Aviação",
-        "Filmes",
-        "Séries",
-        "Animes",
-        "Desenho",
-        "Arte",
-        "Fotografia",
-        "Design",
-        "Leitura",
-        "Escrita",
-        "História",
-        "Geografia",
-        "Filosofia",
-        "Psicologia",
-        "Sociologia",
-        "Política",
-        "Economia",
-        "Empreendedorismo",
-        "Finanças",
-        "Marketing",
-        "Idiomas",
-        "Viagens",
-        "Natureza",
-        "Animais",
-        "Culinária",
-        "Dança",
-        "Teatro",
-        "Religião",
-        "Mitologia",
-        "Mangás",
-        "Colecionismo"
-    ]
-    )
+            [
+                "Música",
+                "Futebol",
+                "Academia",
+                "Corrida",
+                "Jogos",
+                "Programação",
+                "Tecnologia",
+                "Filmes",
+                "Animes",
+                "Leitura",
+                "História",
+                "Geografia",
+                "Filosofia",
+                "Viagens",
+                "Natureza",
+                "Animais",
+                "Mangás"
+            ],
+            key="hobbies"
+        )
 
         dificuldade = st.selectbox(
             "Nível de dificuldade no tema",
@@ -353,11 +424,13 @@ with aba1:
                 "Iniciante",
                 "Intermediário",
                 "Avançado"
-            ]
+            ],
+            key="dificuldade"
         )
 
         maior_dificuldade = st.text_area(
-            "Qual sua maior dificuldade ao estudar esse tema?"
+            "Qual sua maior dificuldade ao estudar esse tema?",
+            key="maior_dificuldade"
         )
 
         aprende_melhor = st.multiselect(
@@ -369,9 +442,9 @@ with aba1:
                 "Analogias",
                 "Discussão/conversa",
                 "Teoria",
-                "Com perguntas que me façam pensar",
-
-            ]
+                "Com perguntas que me façam pensar"
+            ],
+            key="aprende_melhor"
         )
 
         emocional = st.selectbox(
@@ -383,7 +456,8 @@ with aba1:
                 "Inseguro",
                 "Muito inseguro",
                 "Ansioso"
-            ]
+            ],
+            key="emocional"
         )
 
         estilo_resposta = st.selectbox(
@@ -394,15 +468,20 @@ with aba1:
                 "Passo a passo",
                 "Com exemplos do cotidiano",
                 "Com perguntas guiadas"
-            ]
+            ],
+            key="estilo_resposta"
         )
 
-    
+    # =====================================
+    # SALVAR
+    # =====================================
 
     if st.button("Salvar Perfil"):
-        timestamp = datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
+
         salvar_perfil(
+
             st.session_state.session_id,
+
             nome,
             idade,
             curso,
@@ -417,30 +496,14 @@ with aba1:
             estilo_resposta
         )
 
-        st.session_state.perfil_contexto = {
-                                            "nome": nome,
-                                            "idade": idade,
-                                            "curso": curso,
-                                            "hobbies": hobbies,
-                                            "dificuldade": dificuldade,
-                                            "tema": tema,
-                                            "objetivo": objetivo,
-                                            "tempo_estudo": tempo_estudo,
-                                            "maior_dificuldade": maior_dificuldade,
-                                            "aprende_melhor": aprende_melhor,
-                                            "emocional": emocional,
-                                            "estilo_resposta": estilo_resposta
-                                            }
-
-
-
-        st.success("Perfil salvo com sucesso!")
+        st.success(
+            "Perfil salvo com sucesso!"
+        )
 
     st.markdown(
         '</div>',
         unsafe_allow_html=True
     )
-
 
 
 
