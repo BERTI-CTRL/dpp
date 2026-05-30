@@ -231,9 +231,7 @@ with aba1:
         """
     )
 
-    # =====================================
-    # INICIALIZA SESSION STATE
-    # =====================================
+  
 
     campos = {
 
@@ -258,9 +256,7 @@ with aba1:
 
             st.session_state[chave] = valor
 
-    # =====================================
-    # CARREGAR PERFIL
-    # =====================================
+    
 
     if "perfil_carregado" in st.session_state:
 
